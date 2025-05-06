@@ -7,16 +7,16 @@
             <!-- Game grid -->
             <div id="GAME-GRID" 
                 :style="gridStyle"
-                @mouseup="isMouseDown = false"
-                @mouseleave="isMouseDown = false"
+                @mouseup="lostMouseTrack"
+                @mouseleave="lostMouseTrack"
                 draggable="false"
                 >
                 <template v-for="(cell, index) of level.grid">
                     <div 
                     class="cell" 
                     :style="cellStyle(index)"
-                    @mousedown="isMouseDown = true; cellPressed(index)"
-                    @mouseover="isMouseDown && cellHover(index)"
+                    @mousedown="cellPressed(index)"
+                    @mouseover="cellHover(index)"
 
                     @dragstart.prevent
                     draggable="false"
@@ -128,16 +128,40 @@ const columnsClues = computed(() => {
 const idx = (x,y) => {
     return y * level.value.width + x;
 }
+// And inversely, to get the coordinates of a cell based on its index
+const horizontalIdx = (idx) => {
+    return idx % level.value.width;
+}
+
+const verticalIdx = (idx) => {
+    return Math.floor(idx / level.value.width);
+}
+
+// The filling action type chosen by the user
+// Use ref() to reflect the choice in the template
+const fillingType = ref('fill'); // 'fill' or 'cross' : to fill the cells with 1 or 0
 
 // To interact with cells
+const currentInteraction = {
+    state: 'none', // 'none', 'one', 'multiple' : At which step of the interaction are we
+    firstCell: {x: -1, y: -1}, // The first cell we clicked on : will determine the possible column and row to fill
+    direction: 'none', // 'undefined', 'horizontal', 'vertical'
+    directionIndex: -1, // The index of the direction we are going to fill (row or column)
+}
+
 const isMouseDown = ref(false);
 
 const cellPressed = (index) => {
+    isMouseDown.value = true;
     levelResolution.value[index] = 1;
 }
 
 const cellHover = (index) => {
-    levelResolution.value[index] = 0
+    if (isMouseDown.value) levelResolution.value[index] = 1;
+}
+
+const lostMouseTrack = () => {
+    isMouseDown.value = false;
 }
 
 /* For the onMounted() method */
