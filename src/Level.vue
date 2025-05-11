@@ -3,6 +3,27 @@
         <h2>Level {{ levelNb }}</h2>
         <span>Size of the grid</span>
         <input type="range" v-model="cellSize" min="16" max="64" step="1" :style="{width: '80%', zIndex: 2}"/>
+        <div id="FILLING-CHOOSER" v-if="!hasWon">
+            <div class="filling-choice" id="FILLING-CHOICE-FILL" 
+            @click="chosenFillingType = FillingType.fill"
+            :style="{
+                width: cellSize + 'px',
+                height: cellSize + 'px',
+                backgroundColor: 'white',
+                border: chosenFillingType==FillingType.fill ? '4px solid yellow' : 'none'
+            }"></div>
+            <div class="filling-choice" id="FILLING-CHOICE-CROSS" 
+            @click="chosenFillingType = FillingType.cross"
+            :style="{
+                width: cellSize + 'px',
+                height: cellSize + 'px',
+                backgroundColor: 'red',
+                border: chosenFillingType==FillingType.cross ? '4px solid yellow' : 'none'
+            }"></div>
+        </div>
+        <div v-else>
+            <h3>You won ! Congratulations !</h3>
+        </div>
         <div id="GAME-CONTAINER" :style="containerOffset">
             <!-- Game grid -->
             <div id="GAME-GRID" 
@@ -11,12 +32,12 @@
                 @mouseleave="lostMouseTrack"
                 draggable="false"
                 >
-                <template v-for="(cell, index) of level.grid">
+                <template v-for="(_, index) of level.grid">
                     <div 
                     class="cell" 
                     :style="cellStyle(index)"
-                    @mousedown="cellPressed(index)"
-                    @mouseover="cellHover(index)"
+                    @mousedown="cellPress(index)"
+                    @mouseenter="cellEnter(index)"
 
                     @dragstart.prevent
                     draggable="false"
@@ -68,15 +89,18 @@
 /* Imports, props and emits */
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import FillingType from './FillingType';
 
 const props = defineProps({
     levelNb : Number,
 }) 
 
-/* Logic of the game and the inputs */
+/* Game logic */
 
-// The level object containing the grid and its dimensions
+// The level to solve
 const level = ref({})
+
+// The actual resolution of the level
 const levelResolution = ref([]);
 
 // Clues to display on the left and at the top of the grid
@@ -86,11 +110,11 @@ const rowsClues = computed(() => {
         let rowClues = [];
         let currentClueLength = 0;
         for (let i = 0; i < level.value.width; i++) {
-            let cell = level.value.grid[idx(i,j)];
-            if (cell === 0 && currentClueLength>0) {
+            let cell = level.value.grid[coordsToIndex(i,j)];
+            if (cell === FillingType.empty && currentClueLength>0) {
                 rowClues.push(currentClueLength);
                 currentClueLength = 0;
-            } else if (cell === 1) {
+            } else if (cell === FillingType.fill) {
                 currentClueLength++;
                 if (i === level.value.width - 1) rowClues.push(currentClueLength)
             }
@@ -107,12 +131,12 @@ const columnsClues = computed(() => {
         let columnClues = [];
         let currentClueLength = 0;
         for (let j = 0; j < level.value.height; j++) {
-            let cell = level.value.grid[idx(i,j)];
+            let cell = level.value.grid[coordsToIndex(i,j)];
             // If the cell is filled (1), we add 1 to the current clue length
-            if (cell === 0 && currentClueLength>0) {
+            if (cell === FillingType.empty && currentClueLength>0) {
                 columnClues.push(currentClueLength);
                 currentClueLength = 0;
-            } else if (cell === 1) {
+            } else if (cell === FillingType.fill) {
                 currentClueLength++;
                 if (j === level.value.height - 1) columnClues.push(currentClueLength)
             }
@@ -125,7 +149,7 @@ const columnsClues = computed(() => {
 
 // Function to get the index of a cell in the grid
 // based on its x and y coordinates
-const idx = (x,y) => {
+const coordsToIndex = (x,y) => {
     return y * level.value.width + x;
 }
 // And inversely, to get the coordinates of a cell based on its index
@@ -137,32 +161,122 @@ const verticalIdx = (idx) => {
     return Math.floor(idx / level.value.width);
 }
 
+const indexToCoords = (idx) => {
+    return {
+        x: horizontalIdx(idx),
+        y: verticalIdx(idx)
+    }
+}
 // The filling action type chosen by the user
 // Use ref() to reflect the choice in the template
-const fillingType = ref('fill'); // 'fill' or 'cross' : to fill the cells with 1 or 0
+const chosenFillingType = ref(FillingType.fill); // 'fill' or 'cross' : to fill the cells with 1 or 0
 
 // To interact with cells
 const currentInteraction = {
     state: 'none', // 'none', 'one', 'multiple' : At which step of the interaction are we
+    actualFillingType: FillingType.fill, // Different than chosenFillingType because we can empty
     firstCell: {x: -1, y: -1}, // The first cell we clicked on : will determine the possible column and row to fill
     direction: 'none', // 'undefined', 'horizontal', 'vertical'
     directionIndex: -1, // The index of the direction we are going to fill (row or column)
 }
 
-const isMouseDown = ref(false);
-
-const cellPressed = (index) => {
-    isMouseDown.value = true;
-    levelResolution.value[index] = 1;
+const resetCurrentInteraction = () => {   
+    currentInteraction.state = 'none';
+    currentInteraction.actualFillingType = FillingType.fill;
+    currentInteraction.firstCell = {x: -1, y: -1};
+    currentInteraction.direction = 'none';
+    currentInteraction.directionIndex = -1;    
 }
 
-const cellHover = (index) => {
-    if (isMouseDown.value) levelResolution.value[index] = 1;
+// Change the cell value
+const changeCellValue = (index, filling) => {
+    if(filling !== null) levelResolution.value[index] = filling;
+}
+
+// Computes the correct filling depending on user choice and clicked cell
+const decideActualFillingType = (cellValue) => {
+    if (chosenFillingType.value == FillingType.fill){
+        if (cellValue == FillingType.empty) return FillingType.fill;
+        else if (cellValue == FillingType.fill) return FillingType.empty;
+        else if (cellValue == FillingType.cross) return null;
+    } else if (chosenFillingType.value == FillingType.cross) {
+        if (cellValue == FillingType.empty) return FillingType.cross;
+        else if (cellValue == FillingType.fill) return null;
+        else if (cellValue == FillingType.cross) return FillingType.empty;
+    } else {
+        console.error("Problem in chosenFillingType : value not allowed =>", chosenFillingType)
+    }
+}
+
+const editCell = (index) => {
+    if (currentInteraction.state == 'none') {
+        currentInteraction.state = 'one';
+        currentInteraction.actualFillingType = decideActualFillingType(levelResolution.value[index]);
+        currentInteraction.firstCell = indexToCoords(index);
+        console.log("First cell :", currentInteraction.firstCell);
+    } else if (currentInteraction.state == 'one') {
+        currentInteraction.state = 'multiple';
+        const cell = indexToCoords(index);
+        const firstCell = currentInteraction.firstCell;
+        if (cell.x === firstCell.x && cell.y !== firstCell.y) {
+            currentInteraction.direction = 'horizontal';
+            currentInteraction.directionIndex = cell.x;
+        } else if (cell.x !== firstCell.x && cell.y === firstCell.y) {
+            currentInteraction.direction = 'vertical';
+            currentInteraction.directionIndex = cell.y;
+        } else {
+            currentInteraction.state = 'one';
+            return; // If the user achieved to move diagonally (even if highly not probable), we stop the function here
+        }
+    } else if (currentInteraction.state == 'multiple') {
+        const cell = indexToCoords(index);
+        // We just test if the cell is not out the direction
+        if (
+            (currentInteraction.direction === 'horizontal'
+            && cell.x !== currentInteraction.directionIndex)
+            ||
+            (currentInteraction.direction === 'vertical' 
+            && cell.y !== currentInteraction.directionIndex)
+        ) return;
+    } else {
+        console.error("The interaction state is", currentInteraction.state, "which is not valid !!!");
+    }
+    // If the function were not stopped until here, change the cell value
+    changeCellValue(index, currentInteraction.actualFillingType)
+}
+
+const mouseEditing = ref(false);
+
+const cellPress = (index) => {
+    mouseEditing.value = true;
+    editCell(index);
+}
+
+const cellEnter = (index) => {
+    if (mouseEditing.value) editCell(index);    
 }
 
 const lostMouseTrack = () => {
-    isMouseDown.value = false;
+    mouseEditing.value = false;
+    resetCurrentInteraction();
 }
+
+// Winning condition
+const hasWon = computed(() => {
+    if (level.value.grid == null || levelResolution.value == null) return false;
+    // Computes the distance between level.value.grid and levelResolution.value 
+    // (i.e.) the number of cells that are not filled correctly
+    const distance = level.value.grid.reduce((acc, val, i) => {
+        const resolutionVal = levelResolution.value[i];
+        const increment = 
+            (val === FillingType.fill && resolutionVal === FillingType.fill) 
+            ||
+            (val !== FillingType.fill && resolutionVal !== FillingType.fill)
+            ? 0 : 1;
+        return acc + increment;
+    }, 0);
+    return distance === 0;
+})
 
 /* For the onMounted() method */
 
@@ -173,7 +287,7 @@ onMounted(() => {
         })
         .then(data => {
             level.value = data;
-            levelResolution.value = Array.from({ length: level.value.width * level.value.height }, () => -1);
+            levelResolution.value = Array.from({ length: level.value.width * level.value.height }, () => FillingType.empty);
             console.log('Level resolution is :', levelResolution.value);
         })
         .catch(error => {
@@ -226,19 +340,19 @@ const gridStyle = computed(() => {
 
 // The cells filling depending on its state (empty, crossed, filled)
 const cellStyle = (idx) => {
-    const solvingState = levelResolution.value[idx];
-    switch (solvingState) {
-        case -1:
+    const value = levelResolution.value[idx];
+    switch (value) {
+        case FillingType.empty:
             return {
                 backgroundColor: 'transparent',
-            };
-        case 0:
-            return {
-                backgroundColor: 'red',
-            };
-        case 1:
+            };       
+        case FillingType.fill:
             return {
                 backgroundColor: 'white',
+            };
+        case FillingType.cross:
+            return {
+                backgroundColor: 'red',
             };
         default:
             return {};
@@ -263,6 +377,9 @@ const gridHLinesStyle = (j) => {
         height: lineWidth.value + 'px',
     }
 }
+
+// TO DO NEXT
+// Display the grid lines with lines every x steps (4 for 12x12, 5 for 10x10, 15x15 or 20x20)
 
 // The clues dimensions
 
@@ -313,6 +430,15 @@ const clueStyle = computed(() => {
    
    
     align-items: center;
+}
+
+#FILLING-CHOOSER {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+
+    width: 80%;
+    height: min-content;
 }
 
 /* The game grid */
