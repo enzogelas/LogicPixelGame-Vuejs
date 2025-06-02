@@ -360,7 +360,11 @@ const cellStyle = (idx) => {
             };
         case FillingType.cross:
             return {
-                backgroundColor: 'red',
+                backgroundColor: 'transparent',
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "80% 80%",
+                backgroundImage: "url(/filling_icons/cross.png)",
             };
         default:
             return {};
@@ -460,6 +464,8 @@ const clueStyle = computed(() => {
 
 .cell {
     -webkit-user-drag: none;
+    width: 100% ;
+    height: 100% ;
 }
 
 /* For the decoration lines */
