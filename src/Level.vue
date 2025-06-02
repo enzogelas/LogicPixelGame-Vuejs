@@ -167,6 +167,7 @@ const indexToCoords = (idx) => {
         y: verticalIdx(idx)
     }
 }
+
 // The filling action type chosen by the user
 // Use ref() to reflect the choice in the template
 const chosenFillingType = ref(FillingType.fill); // 'fill' or 'cross' : to fill the cells with 1 or 0
@@ -175,7 +176,10 @@ const chosenFillingType = ref(FillingType.fill); // 'fill' or 'cross' : to fill 
 const currentInteraction = {
     state: 'none', // 'none', 'one', 'multiple' : At which step of the interaction are we
     actualFillingType: FillingType.fill, // Different than chosenFillingType because we can empty
+    actualModifiableType: FillingType.empty, // Type that can be modified
+    // ONLY for state 'one'
     firstCell: {x: -1, y: -1}, // The first cell we clicked on : will determine the possible column and row to fill
+    // ONLY for state 'multiple'
     direction: 'none', // 'undefined', 'horizontal', 'vertical'
     directionIndex: -1, // The index of the direction we are going to fill (row or column)
 }
@@ -183,6 +187,7 @@ const currentInteraction = {
 const resetCurrentInteraction = () => {   
     currentInteraction.state = 'none';
     currentInteraction.actualFillingType = FillingType.fill;
+    currentInteraction.actualModifiableType = FillingType.empty;
     currentInteraction.firstCell = {x: -1, y: -1};
     currentInteraction.direction = 'none';
     currentInteraction.directionIndex = -1;    
@@ -190,19 +195,21 @@ const resetCurrentInteraction = () => {
 
 // Change the cell value
 const changeCellValue = (index, filling) => {
-    if(filling !== null) levelResolution.value[index] = filling;
+    const formerValue = levelResolution.value[index];
+    if(filling !== null && currentInteraction.actualModifiableType == formerValue) 
+        levelResolution.value[index] = filling;
 }
 
 // Computes the correct filling depending on user choice and clicked cell
-const decideActualFillingType = (cellValue) => {
+const decideActualFillingType = (firstCellValue) => {
     if (chosenFillingType.value == FillingType.fill){
-        if (cellValue == FillingType.empty) return FillingType.fill;
-        else if (cellValue == FillingType.fill) return FillingType.empty;
-        else if (cellValue == FillingType.cross) return null;
+        if (firstCellValue == FillingType.empty) return FillingType.fill;
+        else if (firstCellValue == FillingType.fill) return FillingType.empty;
+        else if (firstCellValue == FillingType.cross) return null;
     } else if (chosenFillingType.value == FillingType.cross) {
-        if (cellValue == FillingType.empty) return FillingType.cross;
-        else if (cellValue == FillingType.fill) return null;
-        else if (cellValue == FillingType.cross) return FillingType.empty;
+        if (firstCellValue == FillingType.empty) return FillingType.cross;
+        else if (firstCellValue == FillingType.fill) return null;
+        else if (firstCellValue == FillingType.cross) return FillingType.empty;
     } else {
         console.error("Problem in chosenFillingType : value not allowed =>", chosenFillingType)
     }
@@ -212,6 +219,7 @@ const editCell = (index) => {
     if (currentInteraction.state == 'none') {
         currentInteraction.state = 'one';
         currentInteraction.actualFillingType = decideActualFillingType(levelResolution.value[index]);
+        currentInteraction.actualModifiableType = levelResolution.value[index];
         currentInteraction.firstCell = indexToCoords(index);
         console.log("First cell :", currentInteraction.firstCell);
     } else if (currentInteraction.state == 'one') {
