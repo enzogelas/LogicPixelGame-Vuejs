@@ -18,15 +18,14 @@ import { onMounted, ref } from 'vue';
 const emits = defineEmits(['goToGame'])
 
 onMounted(() => {
-    fetch('data/levels.json')
-        .then(response => response.json())
-        .then(data => {
-            console.log('Levels data:', data);
-            levels.value = data
-        })
-        .catch(error => {
-            console.error('Error fetching levels:', error);
-        });
+    import('@/assets/levels.json')
+    .then((module) => {
+        console.log('Levels data:', module.default);
+        levels.value = module.default;
+    })
+    .catch((error) => {
+        console.error('Error loading levels:', error);
+    });
 }); 
 
 const levels = ref([]);

@@ -289,18 +289,18 @@ const hasWon = computed(() => {
 /* For the onMounted() method */
 
 onMounted(() => {
-    fetch('/data/' + String(props.levelNb) + '.json')
-        .then(response => {
-            return response.json();
-        })
-        .then(data => {
-            level.value = data;
-            levelResolution.value = Array.from({ length: level.value.width * level.value.height }, () => FillingType.empty);
-            console.log('Level resolution is :', levelResolution.value);
-        })
-        .catch(error => {
-            console.error('Error fetching levels:', error);
-        });
+    import(`@/assets/${props.levelNb}.json`)
+    .then((module) => {
+        level.value = module.default;
+        levelResolution.value = Array.from(
+        { length: level.value.width * level.value.height },
+        () => FillingType.empty
+        );
+        console.log('Level resolution is :', levelResolution.value);
+    })
+    .catch((error) => {
+        console.error('Error loading level:', error);
+    });
 
     updateOffset();
 
