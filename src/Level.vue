@@ -1,33 +1,10 @@
 <template>
     <div id="MAIN-DIV">
         <h2>Level {{ levelNb }}</h2>
-        <span>Size of the grid</span>
-        <input type="range" v-model="cellSize" min="16" max="64" step="1" :style="{width: '80%', zIndex: 2}"/>
-        <div id="FILLING-CHOOSER" v-if="!hasWon">
-            <div class="filling-choice" id="FILLING-CHOICE-FILL" 
-            @click="chosenFillingType = FillingType.fill"
-            :style="{
-                width: cellSize + 'px',
-                height: cellSize + 'px',
-                backgroundColor: 'white',
-                border: chosenFillingType==FillingType.fill ? '4px solid yellow' : 'none'
-            }"></div>
-            <div class="filling-choice" id="FILLING-CHOICE-CROSS" 
-            @click="chosenFillingType = FillingType.cross"
-            :style="{
-                width: cellSize + 'px',
-                height: cellSize + 'px',
-                backgroundColor: 'transparent',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '80% 80%',
-                backgroundImage: 'url(/filling_icons/cross.png)',
-                border: chosenFillingType==FillingType.cross ? '4px solid yellow' : 'none'
-            }"></div>
-        </div>
-        <div v-else>
-            <h3>You won ! Congratulations !</h3>
-        </div>
+        <GridSizeChooser v-model="cellSize" min="16" max="100"/>
+        
+        <FillingTypeChooser v-model="chosenFillingType" :cellSize="cellSize"/>
+        
         <div id="GAME-CONTAINER" :style="containerOffset">
             <!-- Game grid -->
             <div id="GAME-GRID" 
@@ -94,6 +71,8 @@
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import FillingType from './FillingType';
+import GridSizeChooser from './GridSizeChooser.vue';
+import FillingTypeChooser from './FillingTypeChooser.vue';
 
 const props = defineProps({
     levelNb : Number,
