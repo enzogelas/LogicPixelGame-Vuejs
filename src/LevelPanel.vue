@@ -4,7 +4,7 @@
         <div id="LEVELS-LIST">
             <template v-for="level of levels" :key="level.level">
                 <RouterLink :to="'/level/' + level.level" v-slot="{ navigate }">
-                    <button @click="navigate">{{ level.name }}</button>
+                    <button class="levelButton" @click="navigate">{{ level.name }}</button>
                 </RouterLink>
             </template>
         </div>
@@ -34,11 +34,8 @@ const levels = ref([]);
 
 <style>
 .levelButton {
-    width: min-content;
-    height: min-content;
-    /*
-    white-space: nowrap;
-    */
+    width: fit-content;
+    height: fit-content;
 }
 
 #MAIN-DIV {

@@ -17,7 +17,11 @@
             :style="{
                 width: cellSize + 'px',
                 height: cellSize + 'px',
-                backgroundColor: 'red',
+                backgroundColor: 'transparent',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '80% 80%',
+                backgroundImage: 'url(/filling_icons/cross.png)',
                 border: chosenFillingType==FillingType.cross ? '4px solid yellow' : 'none'
             }"></div>
         </div>
@@ -253,19 +257,19 @@ const editCell = (index) => {
     changeCellValue(index, currentInteraction.actualFillingType)
 }
 
-const mouseEditing = ref(false);
+let mouseEditing = false;
 
 const cellPress = (index) => {
-    mouseEditing.value = true;
+    mouseEditing = true;
     editCell(index);
 }
 
 const cellEnter = (index) => {
-    if (mouseEditing.value) editCell(index);    
+    if (mouseEditing) editCell(index);    
 }
 
 const lostMouseTrack = () => {
-    mouseEditing.value = false;
+    mouseEditing = false;
     resetCurrentInteraction();
 }
 
