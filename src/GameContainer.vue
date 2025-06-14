@@ -35,27 +35,10 @@
         </div>
         
 
-        <!-- Clues -->
-        <!-- Global line of columns clues -->
-        <div id="COLUMNS-CLUES"> 
-            <!-- Representing a "single column" clues -->
-            <div class="single-column-clues" v-for="singleColumnClues of columnsClues" :style="singleColumnCluesStyle"> 
-                <!-- Each clue of this row, written in column -->
-                <div class="clue" v-for="clue of singleColumnClues" :style="clueStyle">
-                    {{ clue }}
-                </div>
-            </div>
-        </div>
-        <!-- Global column of rows clues -->
-        <div id="ROWS-CLUES">
-            <!-- Representing a "single row" clues -->
-            <div class="single-row-clues" v-for="singleRowClues of rowsClues" :style="singleRowCluesStyle">
-                <!-- Each clue of this column, written in row -->
-                <div class="clue" v-for="clue of singleRowClues" :style="clueStyle">
-                    {{ clue }}
-                </div>
-            </div>
-        </div>
+        <!-- Clues -->      
+        <ColumnsClues :level="level" :cellSize="props.cellSize"/>
+        <RowsClues :level="level" :cellSize="cellSize"/>
+
     </div>
 </template>
 
@@ -64,6 +47,8 @@
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import FillingType from './FillingType';
+import ColumnsClues from './ColumnsClues.vue';
+import RowsClues from './RowsClues.vue';
 
 const props = defineProps({
     levelNb : Number,
@@ -78,50 +63,6 @@ const level = ref({})
 
 // The actual resolution of the level
 const levelResolution = ref([]);
-
-// Clues to display on the left and at the top of the grid
-const rowsClues = computed(() => {
-    let clues = [];
-    for (let j = 0; j < level.value.height; j++) {
-        let rowClues = [];
-        let currentClueLength = 0;
-        for (let i = 0; i < level.value.width; i++) {
-            let cell = level.value.grid[coordsToIndex(i,j)];
-            if (cell === FillingType.empty && currentClueLength>0) {
-                rowClues.push(currentClueLength);
-                currentClueLength = 0;
-            } else if (cell === FillingType.fill) {
-                currentClueLength++;
-                if (i === level.value.width - 1) rowClues.push(currentClueLength)
-            }
-        }
-        clues.push(rowClues)
-    }
-    console.log("The rows clues are :",clues)
-    return clues;
-})
-
-const columnsClues = computed(() => {
-    let clues = [];
-    for (let i = 0; i < level.value.width; i++) {
-        let columnClues = [];
-        let currentClueLength = 0;
-        for (let j = 0; j < level.value.height; j++) {
-            let cell = level.value.grid[coordsToIndex(i,j)];
-            // If the cell is filled (1), we add 1 to the current clue length
-            if (cell === FillingType.empty && currentClueLength>0) {
-                columnClues.push(currentClueLength);
-                currentClueLength = 0;
-            } else if (cell === FillingType.fill) {
-                currentClueLength++;
-                if (j === level.value.height - 1) columnClues.push(currentClueLength)
-            }
-        }
-        clues.push(columnClues)
-    }
-    console.log("The columns clues are :",clues)
-    return clues;
-})
 
 // Function to get the index of a cell in the grid
 // based on its x and y coordinates
@@ -361,28 +302,6 @@ const gridHLinesStyle = (j) => {
 // TO DO NEXT
 // Display the grid lines with lines every x steps (4 for 12x12, 5 for 10x10, 15x15 or 20x20)
 
-// The clues dimensions
-
-const singleColumnCluesStyle = computed(() => {
-    return {
-        width: `${props.cellSize}px`,
-        height: 'min-content',
-    }
-})
-
-const singleRowCluesStyle = computed(() => {
-    return {
-        height: `${props.cellSize}px`,
-        width: 'min-content',
-    }
-})
-
-const clueStyle = computed(() => {
-    return {
-        width: `${props.cellSize}px`,
-        height: `${props.cellSize}px`,
-    }
-})
 </script>
 
 <style>
@@ -432,56 +351,4 @@ const clueStyle = computed(() => {
     /* To prevent from dragging */
     pointer-events: none;
 }
-
-/* For the clues to the left and at the top of the grid */
-/* For the columns clues */
-#COLUMNS-CLUES {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: translateY(-100%);
-
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-end;
-    width: 100%;
-}
-
-.single-column-clues {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 0px;
-}
-
-/* For the rows clues */
-#ROWS-CLUES {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: translateX(-100%);
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
-    height: 100%;
-}
-
-.single-row-clues {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 0px;
-}
-
-.clue {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
 </style>

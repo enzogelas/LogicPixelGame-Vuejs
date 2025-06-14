@@ -1,7 +1,7 @@
 <template>
     <div id="MAIN-DIV">
         <h2>Level {{ levelNb }}</h2>
-        <GridSizeChooser v-model="cellSize" min="16" max="100"/>
+        <GridSizeChooser v-model="cellSize" :min="16" :max="64"/>
         
         <FillingTypeChooser v-model="chosenFillingType" :cellSize="cellSize"/>
         

@@ -1,0 +1,111 @@
+<template>
+    <div id="ROWS-CLUES">
+        <!-- Representing a "single row" clues -->
+        <div class="single-row-clues" v-for="singleRowClues of rowsClues" :style="singleRowCluesStyle">
+            <!-- Each clue of this column, written in row -->
+            <div class="clue" v-for="clue of singleRowClues" :style="clueStyle">
+                {{ clue }}
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup>
+
+import { computed } from 'vue';
+import FillingType from './FillingType';
+
+const props = defineProps({
+    level: Object,
+    cellSize: Number
+})
+
+// Function to get the index of a cell in the grid
+// based on its x and y coordinates
+const coordsToIndex = (x,y) => {
+    return y * props.level.width + x;
+}
+// And inversely, to get the coordinates of a cell based on its index
+const horizontalIdx = (idx) => {
+    return idx % props.level.width;
+}
+
+const verticalIdx = (idx) => {
+    return Math.floor(idx / props.level.width);
+}
+
+const indexToCoords = (idx) => {
+    return {
+        x: horizontalIdx(idx),
+        y: verticalIdx(idx)
+    }
+}
+
+// Clues to display on the left and at the top of the grid
+const rowsClues = computed(() => {
+    let clues = [];
+    for (let j = 0; j < props.level.height; j++) {
+        let rowClues = [];
+        let currentClueLength = 0;
+        for (let i = 0; i < props.level.width; i++) {
+            let cell = props.level.grid[coordsToIndex(i,j)];
+            if (cell === FillingType.empty && currentClueLength>0) {
+                rowClues.push(currentClueLength);
+                currentClueLength = 0;
+            } else if (cell === FillingType.fill) {
+                currentClueLength++;
+                if (i === props.level.width - 1) rowClues.push(currentClueLength)
+            }
+        }
+        clues.push(rowClues)
+    }
+    console.log("The rows clues are :",clues)
+    return clues;
+})
+
+const singleRowCluesStyle = computed(() => {
+    return {
+        height: `${props.cellSize}px`,
+        width: 'min-content',
+    }
+})
+
+const clueStyle = computed(() => {
+    return {
+        width: `${props.cellSize}px`,
+        height: `${props.cellSize}px`,
+    }
+})
+
+</script>
+
+<style>
+
+#ROWS-CLUES {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateX(-100%);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    height: 100%;
+}
+
+.single-row-clues {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0px;
+}
+
+.clue {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+</style>
