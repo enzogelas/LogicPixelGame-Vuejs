@@ -17,7 +17,7 @@ import { computed } from 'vue';
 import FillingType from './FillingType';
 
 const props = defineProps({
-    level: Object,
+    columnsClues: Array,
     cellSize: Number
 })
 
@@ -41,28 +41,6 @@ const indexToCoords = (idx) => {
         y: verticalIdx(idx)
     }
 }
-
-const columnsClues = computed(() => {
-    let clues = [];
-    for (let i = 0; i < props.level.width; i++) {
-        let columnClues = [];
-        let currentClueLength = 0;
-        for (let j = 0; j < props.level.height; j++) {
-            let cell = props.level.grid[coordsToIndex(i,j)];
-            // If the cell is filled (1), we add 1 to the current clue length
-            if (cell === FillingType.empty && currentClueLength>0) {
-                columnClues.push(currentClueLength);
-                currentClueLength = 0;
-            } else if (cell === FillingType.fill) {
-                currentClueLength++;
-                if (j === props.level.height - 1) columnClues.push(currentClueLength)
-            }
-        }
-        clues.push(columnClues)
-    }
-    console.log("The columns clues are :",clues)
-    return clues;
-})
 
 const singleColumnCluesStyle = computed(() => {
     return {

@@ -32,12 +32,11 @@
             <template v-for="j in Array.from({ length: level.height + 1 }, (_, j) => j)">
                 <div class="grid-h-line" :style="gridHLinesStyle(j)"></div>
             </template>
-        </div>
-        
+        </div>   
 
         <!-- Clues -->      
-        <ColumnsClues :level="level" :cellSize="props.cellSize"/>
-        <RowsClues :level="level" :cellSize="cellSize"/>
+        <ColumnsClues :columnsClues="columnsClues" :cellSize="props.cellSize"/>
+        <RowsClues :rowsClues="rowsClues" :cellSize="cellSize"/>
 
     </div>
 </template>
@@ -84,6 +83,51 @@ const indexToCoords = (idx) => {
         y: verticalIdx(idx)
     }
 }
+
+// To compute the columns and rows clues
+const columnsClues = computed(() => {
+    let clues = [];
+    for (let i = 0; i < level.value.width; i++) {
+        let columnClues = [];
+        let currentClueLength = 0;
+        for (let j = 0; j < level.value.height; j++) {
+            let cell = level.value.grid[coordsToIndex(i,j)];
+            // If the cell is filled (1), we add 1 to the current clue length
+            if (cell === FillingType.empty && currentClueLength>0) {
+                columnClues.push(currentClueLength);
+                currentClueLength = 0;
+            } else if (cell === FillingType.fill) {
+                currentClueLength++;
+                if (j === level.value.height - 1) columnClues.push(currentClueLength)
+            }
+        }
+        clues.push(columnClues)
+    }
+    console.log("The columns clues are :",clues)
+    return clues;
+})
+
+// Clues to display on the left and at the top of the grid
+const rowsClues = computed(() => {
+    let clues = [];
+    for (let j = 0; j < level.value.height; j++) {
+        let rowClues = [];
+        let currentClueLength = 0;
+        for (let i = 0; i < level.value.width; i++) {
+            let cell = level.value.grid[coordsToIndex(i,j)];
+            if (cell === FillingType.empty && currentClueLength>0) {
+                rowClues.push(currentClueLength);
+                currentClueLength = 0;
+            } else if (cell === FillingType.fill) {
+                currentClueLength++;
+                if (i === level.value.width - 1) rowClues.push(currentClueLength)
+            }
+        }
+        clues.push(rowClues)
+    }
+    console.log("The rows clues are :",clues)
+    return clues;
+})
 
 // To interact with cells
 const currentInteraction = {

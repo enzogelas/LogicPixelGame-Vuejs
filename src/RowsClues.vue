@@ -16,7 +16,7 @@ import { computed } from 'vue';
 import FillingType from './FillingType';
 
 const props = defineProps({
-    level: Object,
+    rowsClues: Array,
     cellSize: Number
 })
 
@@ -40,28 +40,6 @@ const indexToCoords = (idx) => {
         y: verticalIdx(idx)
     }
 }
-
-// Clues to display on the left and at the top of the grid
-const rowsClues = computed(() => {
-    let clues = [];
-    for (let j = 0; j < props.level.height; j++) {
-        let rowClues = [];
-        let currentClueLength = 0;
-        for (let i = 0; i < props.level.width; i++) {
-            let cell = props.level.grid[coordsToIndex(i,j)];
-            if (cell === FillingType.empty && currentClueLength>0) {
-                rowClues.push(currentClueLength);
-                currentClueLength = 0;
-            } else if (cell === FillingType.fill) {
-                currentClueLength++;
-                if (i === props.level.width - 1) rowClues.push(currentClueLength)
-            }
-        }
-        clues.push(rowClues)
-    }
-    console.log("The rows clues are :",clues)
-    return clues;
-})
 
 const singleRowCluesStyle = computed(() => {
     return {
