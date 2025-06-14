@@ -37,7 +37,8 @@ const props = defineProps({
 #FILLING-CHOOSER {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: center;
+    gap: 20px;
 
     width: 80%;
     height: min-content;
