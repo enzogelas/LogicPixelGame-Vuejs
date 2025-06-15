@@ -2,9 +2,12 @@
     <div id="MAIN-DIV">
         <h2>Levels</h2>
         <div id="LEVELS-LIST">
-            <template v-for="level of levels" :key="level.level">
-                <RouterLink :to="'/level/' + level.level" v-slot="{ navigate }">
-                    <button class="levelButton" @click="navigate">{{ level.name }}</button>
+            <template v-for="(level, index) of levels" :key="index">
+                <RouterLink :to="'/level/' + index" v-slot="{ navigate }">
+                    <button class="levelButton" @click="navigate" 
+                    :style="{backgroundColor: difficultyColor[level.difficulty]}">
+                        {{ level.name }}
+                    </button>
                 </RouterLink>
             </template>
         </div>
@@ -17,10 +20,16 @@ import { onMounted, ref } from 'vue';
 
 const emits = defineEmits(['goToGame'])
 
+const difficultyColor = [
+    'green',
+    'yellow',
+    'orange',
+    'red'
+]
+
 onMounted(() => {
     import('@/assets/levels.json')
     .then((module) => {
-        console.log('Levels data:', module.default);
         levels.value = module.default;
     })
     .catch((error) => {
