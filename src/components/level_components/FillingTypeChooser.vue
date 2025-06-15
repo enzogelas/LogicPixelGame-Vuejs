@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import FillingType from './FillingType';
+import FillingType from '@/FillingType';
 
 const chosenFillingType = defineModel()
 

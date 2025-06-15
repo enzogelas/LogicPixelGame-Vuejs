@@ -45,9 +45,9 @@
 /* Imports, props and emits */
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import FillingType from './FillingType';
-import ColumnsClues from './ColumnsClues.vue';
-import RowsClues from './RowsClues.vue';
+import FillingType from '@/FillingType';
+import ColumnsClues from './game_container_components/ColumnsClues.vue';
+import RowsClues from './game_container_components/RowsClues.vue';
 
 const props = defineProps({
     levelNb : Number,

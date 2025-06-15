@@ -1,8 +1,8 @@
 // router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import Menu from '../Menu.vue'
-import LevelPanel from '../LevelPanel.vue'
-import Level from '../Level.vue'
+import Menu from '../components/Menu.vue'
+import LevelPanel from '../components/LevelPanel.vue'
+import Level from '../components/Level.vue'
 
 const routes = [
   { path: '/', name: 'Menu', component: Menu },

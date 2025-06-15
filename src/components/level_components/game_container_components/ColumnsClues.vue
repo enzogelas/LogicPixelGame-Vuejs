@@ -14,7 +14,6 @@
 <script setup>
 
 import { computed } from 'vue';
-import FillingType from './FillingType';
 
 const props = defineProps({
     columnsClues: Array,

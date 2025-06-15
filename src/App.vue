@@ -8,9 +8,6 @@
 
 <script setup>
 import {ref} from 'vue'
-import Menu from './Menu.vue'
-import LevelPanel from './LevelPanel.vue'
-import Level from './Level.vue'
 
 const Mode = {
   MENU: 'menu',

@@ -14,10 +14,10 @@
 /* Imports, props and emits */
 
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import FillingType from './FillingType';
-import GridSizeChooser from './GridSizeChooser.vue';
-import FillingTypeChooser from './FillingTypeChooser.vue';
-import GameContainer from './GameContainer.vue';
+import FillingType from '@/FillingType';
+import GridSizeChooser from './level_components/GridSizeChooser.vue';
+import FillingTypeChooser from './level_components/FillingTypeChooser.vue'
+import GameContainer from './level_components/GameContainer.vue'
 
 const props = defineProps({
     levelNb : Number,
