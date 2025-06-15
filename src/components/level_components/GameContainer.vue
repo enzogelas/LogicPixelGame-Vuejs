@@ -76,24 +76,44 @@ const indexToCoords = (idx) => {
     }
 }
 
+const oneColumnClue = (column) => {
+    let columnClues = [];
+    let currentClueLength = 0;
+    for (let j = 0; j < level.value.height; j++) {
+        let cell = level.value.grid[coordsToIndex(column,j)];
+        // If the cell is filled (1), we add 1 to the current clue length
+        if (cell === FillingType.empty && currentClueLength>0) {
+            columnClues.push(currentClueLength);
+            currentClueLength = 0;
+        } else if (cell === FillingType.fill) {
+            currentClueLength++;
+            if (j === level.value.height - 1) columnClues.push(currentClueLength)
+        }
+    }
+    return columnClues
+}
+
+const oneRowClue = (row) => {
+    let rowClues = [];
+    let currentClueLength = 0;
+    for (let i = 0; i < level.value.width; i++) {
+        let cell = level.value.grid[coordsToIndex(i,row)];
+        if (cell === FillingType.empty && currentClueLength>0) {
+            rowClues.push(currentClueLength);
+            currentClueLength = 0;
+        } else if (cell === FillingType.fill) {
+            currentClueLength++;
+            if (i === level.value.width - 1) rowClues.push(currentClueLength)
+        }
+    }
+    return rowClues
+}
+
 // To compute the columns and rows clues
 const columnsClues = computed(() => {
     let clues = [];
     for (let i = 0; i < level.value.width; i++) {
-        let columnClues = [];
-        let currentClueLength = 0;
-        for (let j = 0; j < level.value.height; j++) {
-            let cell = level.value.grid[coordsToIndex(i,j)];
-            // If the cell is filled (1), we add 1 to the current clue length
-            if (cell === FillingType.empty && currentClueLength>0) {
-                columnClues.push(currentClueLength);
-                currentClueLength = 0;
-            } else if (cell === FillingType.fill) {
-                currentClueLength++;
-                if (j === level.value.height - 1) columnClues.push(currentClueLength)
-            }
-        }
-        clues.push(columnClues)
+        clues.push(oneColumnClue(i));
     }
     console.log("The columns clues are :",clues)
     return clues;
@@ -103,22 +123,98 @@ const columnsClues = computed(() => {
 const rowsClues = computed(() => {
     let clues = [];
     for (let j = 0; j < level.value.height; j++) {
-        let rowClues = [];
-        let currentClueLength = 0;
-        for (let i = 0; i < level.value.width; i++) {
-            let cell = level.value.grid[coordsToIndex(i,j)];
-            if (cell === FillingType.empty && currentClueLength>0) {
-                rowClues.push(currentClueLength);
-                currentClueLength = 0;
-            } else if (cell === FillingType.fill) {
-                currentClueLength++;
-                if (i === level.value.width - 1) rowClues.push(currentClueLength)
-            }
-        }
-        clues.push(rowClues)
+        clues.push(oneRowClue(j));
     }
     console.log("The rows clues are :",clues)
     return clues;
+})
+
+// To compute the configuration of a row/column (like clue, but for levelresolution)
+const oneColumnResolution = (column) => {
+    let columnResolution = [];
+    let currentResolutionLength = 0;
+    for (let j = 0; j < level.value.height; j++) {
+        let cell = levelResolution.value[coordsToIndex(column,j)];
+        // If the cell is filled (1), we add 1 to the current clue length
+        if (cell === FillingType.empty && currentResolutionLength>0) {
+            columnResolution.push(currentResolutionLength);
+            currentResolutionLength = 0;
+        } else if (cell === FillingType.fill) {
+            currentResolutionLength++;
+            if (j === level.value.height - 1) columnResolution.push(currentResolutionLength)
+        }
+    }
+    return columnResolution
+}
+
+const oneRowResolution = (row) => {
+    let rowResolution = [];
+    let currentResolutionLength = 0;
+    for (let i = 0; i < level.value.width; i++) {
+        let cell = levelResolution.value[coordsToIndex(i,row)];
+        if (cell === FillingType.empty && currentResolutionLength>0) {
+            rowResolution.push(currentResolutionLength);
+            currentResolutionLength = 0;
+        } else if (cell === FillingType.fill) {
+            currentResolutionLength++;
+            if (i === level.value.width - 1) rowResolution.push(currentResolutionLength)
+        }
+    }
+    return rowResolution
+}
+
+const columnsCorrespondances = ref([]);
+const rowsCorrecpondances = ref([]);
+
+const checkColumnCorrespondance = (column) => {
+    if (level.value.grid == null || levelResolution.value == null) return false;
+    const columnResolution = oneColumnResolution(column);
+    const columnClue = columnsClues.value[column];
+    if (columnResolution.length !== columnClue.length) return false;
+    for (let i = 0; i < columnResolution.length; i++) {
+        if (columnResolution[i] !== columnClue[i]) return false;
+    }
+    return true;
+}
+
+const checkRowCorrespondance = (row) => {
+    if (level.value.grid == null || levelResolution.value == null) return false;
+    const rowResolution = oneRowResolution(row);
+    const rowClue = rowsClues.value[row];
+    if (rowResolution.length !== rowClue.length) return false;
+    for (let i = 0; i < rowResolution.length; i++) {
+        if (rowResolution[i] !== rowClue[i]) return false;
+    }
+    return true;
+}
+
+const updateColumnCorrespondance = (column) => { columnsCorrespondances.value[column] = checkColumnCorrespondance(column); }
+const updateRowCorrespondance = (row) => { rowsCorrecpondances.value[row] = checkRowCorrespondance(row); }
+
+const updateAllCorrespondances = () => {
+    for (let i = 0; i < level.value.width; i++) {
+        updateColumnCorrespondance(i);
+    }
+    for (let j = 0; j < level.value.height; j++) {
+        updateRowCorrespondance(j);
+    }
+}
+
+// Winning condition
+const hasWon = computed(() => {
+    if (level.value.grid == null || levelResolution.value == null) return false;
+    // Check if all columns and rows correspondances match the resolution
+    for (let i = 0; i < level.value.width; i++) {
+        if (!columnsCorrespondances.value[i]) {
+            return false;
+        }
+    }
+    for (let j = 0; j < level.value.height; j++) {
+        if (!rowsCorrecpondances.value[j]) {
+            return false;
+        }
+    }
+    return true;
 })
 
 // To interact with cells
@@ -145,8 +241,14 @@ const resetCurrentInteraction = () => {
 // Change the cell value
 const changeCellValue = (index, filling) => {
     const formerValue = levelResolution.value[index];
-    if(filling !== null && currentInteraction.actualModifiableType == formerValue) 
+    if(filling !== null && currentInteraction.actualModifiableType == formerValue) {
         levelResolution.value[index] = filling;
+
+        // Update the correspondance of the column and row of the cell
+        const cell = indexToCoords(index);
+        updateColumnCorrespondance(cell.x);
+        updateRowCorrespondance(cell.y);
+    }
 }
 
 // Computes the correct filling depending on user choice and clicked cell
@@ -171,7 +273,6 @@ const editCell = (index) => {
         currentInteraction.actualFillingType = decideActualFillingType(levelResolution.value[index]);
         currentInteraction.actualModifiableType = levelResolution.value[index];
         currentInteraction.firstCell = cell;
-        console.log("First cell :", currentInteraction.firstCell);
     } else if (currentInteraction.state == 'one') {
         currentInteraction.state = 'multiple';
         const firstCell = currentInteraction.firstCell;
@@ -217,34 +318,26 @@ const lostMouseTrack = () => {
     resetCurrentInteraction();
 }
 
-// Winning condition
-const hasWon = computed(() => {
-    if (level.value.grid == null || levelResolution.value == null) return false;
-    // Computes the distance between level.value.grid and levelResolution.value 
-    // (i.e.) the number of cells that are not filled correctly
-    const distance = level.value.grid.reduce((acc, val, i) => {
-        const resolutionVal = levelResolution.value[i];
-        const increment = 
-            (val === FillingType.fill && resolutionVal === FillingType.fill) 
-            ||
-            (val !== FillingType.fill && resolutionVal !== FillingType.fill)
-            ? 0 : 1;
-        return acc + increment;
-    }, 0);
-    return distance === 0;
-})
-
 /* For the onMounted() method */
 
 onMounted(() => {
     import(`@/assets/${props.levelNb}.json`)
     .then((module) => {
         level.value = module.default;
+
         levelResolution.value = Array.from(
         { length: level.value.width * level.value.height },
         () => FillingType.empty
         );
-        console.log('Level resolution is :', levelResolution.value);
+
+        // Fill in the columns and rows correspondance arrays with false values
+        for (let i = 0; i < level.value.width; i++) {
+            columnsCorrespondances.value.push(false);
+        }
+        for (let j = 0; j < level.value.height; j++) {
+            rowsCorrecpondances.value.push(false);
+        }
+        updateAllCorrespondances();
     })
     .catch((error) => {
         console.error('Error loading level:', error);
