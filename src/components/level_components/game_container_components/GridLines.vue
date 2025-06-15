@@ -13,7 +13,7 @@
 
 <script setup>
 
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     level: Object,
@@ -22,25 +22,37 @@ const props = defineProps({
 })
 
 // The grid decoration lines dimensions
-const lineWidth = ref(4); // Width of the grid lines
+const defaultLineWidth = computed(() => {
+    return Math.max(Math.floor(props.cellSize/10), 1)
+})
 
 const gridVLinesStyle = (i) => {
-    const factor = (i % props.gridLinesSteps.horizontal == 0) ? 2 : 1
-    const actualWidth = factor * lineWidth.value
+    const isBig = (i % props.gridLinesSteps.horizontal == 0)
+    const factor = isBig ? 2 : 1
+    const actualWidth = factor * defaultLineWidth.value
+    const actualColor = isBig ? 'black' : 'gray'
+    const zIndex = isBig ? 2 : 1
     return {
         left: `${i * props.cellSize - actualWidth/2}px`,
         width: actualWidth + 'px',
-        height: `100%`,
+        height: (props.level.height * props.cellSize + actualWidth) + 'px',
+        backgroundColor: actualColor,
+        zIndex : zIndex
     }
 }
 
 const gridHLinesStyle = (j) => {
-    const factor = (j % props.gridLinesSteps.vertical == 0) ? 2 : 1
-    const actualWidth = factor * lineWidth.value
+    const isBig = (j % props.gridLinesSteps.horizontal == 0)
+    const factor = isBig ? 2 : 1
+    const actualWidth = factor * defaultLineWidth.value
+    const actualColor = isBig ? 'black' : 'gray'
+    const zIndex = isBig ? 2 : 1
     return {
         top: `${j * props.cellSize - actualWidth/2}px`,
-        width: `100%`,
+        width: (props.level.width * props.cellSize + actualWidth) + 'px',
         height: actualWidth + 'px',
+        backgroundColor: actualColor,
+        zIndex : zIndex
     }
 }
 
@@ -56,12 +68,14 @@ const gridHLinesStyle = (j) => {
     width: 100%;
     height: 100%;
     pointer-events: none;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .grid-v-line, .grid-h-line {
     position: absolute;
-    background-color: black;
-    z-index: 1;
 
     /* To prevent from dragging */
     pointer-events: none;
