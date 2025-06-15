@@ -23,16 +23,7 @@
         </div>
 
         <!-- Decoration grid lines -->
-        <div id="GRID-LINES">
-        <!-- Vertical lines -->        
-            <template v-for="i in Array.from({ length: level.width + 1 }, (_, i) => i)">
-                <div class="grid-v-line" :style="gridVLinesStyle(i)"></div>
-            </template>
-        <!-- Horizontal lines -->
-            <template v-for="j in Array.from({ length: level.height + 1 }, (_, j) => j)">
-                <div class="grid-h-line" :style="gridHLinesStyle(j)"></div>
-            </template>
-        </div>   
+        <GridLines :level="level" :cellSize="props.cellSize" :gridLinesSteps="gridLinesStep"/> 
 
         <!-- Clues -->      
         <ColumnsClues :columnsClues="columnsClues" :cellSize="props.cellSize"/>
@@ -48,6 +39,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import FillingType from '@/FillingType';
 import ColumnsClues from './game_container_components/ColumnsClues.vue';
 import RowsClues from './game_container_components/RowsClues.vue';
+import GridLines from './game_container_components/GridLines.vue';
 
 const props = defineProps({
     levelNb : Number,
@@ -324,27 +316,20 @@ const cellStyle = (idx) => {
     }
 }
 
-// The grid decoration lines dimensions
-const lineWidth = ref(4); // Width of the grid lines
-
-const gridVLinesStyle = (i) => {
-    return {
-        left: `${i * props.cellSize - lineWidth.value/2}px`,
-        width: lineWidth.value + 'px',
-        height: `100%`,
-    }
+// For grid lines style
+const decideModulo = (value) => {
+    if (value % 5 == 0) return 5
+    if (value % 4 == 0) return 4
+    if (value % 3 == 0) return 3
+    return 1
 }
 
-const gridHLinesStyle = (j) => {
+const gridLinesStep = computed(() => {
     return {
-        top: `${j * props.cellSize - lineWidth.value/2}px`,
-        width: `100%`,
-        height: lineWidth.value + 'px',
+        horizontal: decideModulo(level.value.width),
+        vertical: decideModulo(level.value.height)
     }
-}
-
-// TO DO NEXT
-// Display the grid lines with lines every x steps (4 for 12x12, 5 for 10x10, 15x15 or 20x20)
+})
 
 </script>
 
@@ -377,22 +362,4 @@ const gridHLinesStyle = (j) => {
     height: 100% ;
 }
 
-/* For the decoration lines */
-#GRID-LINES {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.grid-v-line, .grid-h-line {
-    position: absolute;
-    background-color: black;
-    z-index: 1;
-
-    /* To prevent from dragging */
-    pointer-events: none;
-}
 </style>
