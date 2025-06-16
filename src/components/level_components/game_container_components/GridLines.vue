@@ -42,7 +42,7 @@ const gridVLinesStyle = (i) => {
 }
 
 const gridHLinesStyle = (j) => {
-    const isBig = (j % props.gridLinesSteps.horizontal == 0)
+    const isBig = (j % props.gridLinesSteps.vertical == 0)
     const factor = isBig ? 2 : 1
     const actualWidth = factor * defaultLineWidth.value
     const actualColor = isBig ? 'black' : 'gray'

@@ -1,6 +1,6 @@
 <template>
-    <h3 v-if="hasWon">Bravo ! Vous avez complété la grille !</h3>
-    <div id="GAME-CONTAINER" :style="containerOffset">
+    <GameSolved v-if="hasWon" :level="level" :cellSize="cellSize"/>
+    <div v-else id="GAME-CONTAINER" :style="containerOffset">
         <!-- Game grid -->
         <div id="GAME-GRID" 
             :style="gridStyle"
@@ -40,6 +40,7 @@ import FillingType from '@/FillingType';
 import ColumnsClues from './game_container_components/ColumnsClues.vue';
 import RowsClues from './game_container_components/RowsClues.vue';
 import GridLines from './game_container_components/GridLines.vue';
+import GameSolved from './GameSolved.vue';
 
 const props = defineProps({
     levelNb : Number,
@@ -414,10 +415,14 @@ const decideModulo = (value) => {
     if (value % 5 == 0) return 5
     if (value % 4 == 0) return 4
     if (value % 3 == 0) return 3
+    if (value % 2 == 0) return 2
     return 1
 }
 
 const gridLinesStep = computed(() => {
+    console.log("Computed gridLinesStep for level");
+    console.log("Width:", level.value.width, "Height:", level.value.height);
+    console.log("Modulo horizontal:", decideModulo(level.value.width), "Modulo vertical:", decideModulo(level.value.height));
     return {
         horizontal: decideModulo(level.value.width),
         vertical: decideModulo(level.value.height)
